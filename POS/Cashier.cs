@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace POS
@@ -27,17 +28,17 @@ namespace POS
             ticketGrid.AlternatingRowsDefaultCellStyle = ticketGrid.RowsDefaultCellStyle;
         }
 
-        private void dateTimer_Tick(object sender, EventArgs e)
+        private void DateTimer_Tick(object sender, EventArgs e)
         {
             dateTime.Text = "Date: " + DateTime.Now;
         }
 
-        private void addProdButton_Click(object sender, EventArgs e)
+        private void AddProdButton_Click(object sender, EventArgs e)
         {
             if (Database.ProductAvailable(barcodeTB.Text, Convert.ToInt32(QtyUpDown.Value)))
             {
-                List<string> product = Database.GetProductByBarcode(barcodeTB.Text);
-                ticketGrid.Rows.Add(new[] { product[0], product[1], product[2], QtyUpDown.Value.ToString(), (Convert.ToDecimal(product[2]) * QtyUpDown.Value).ToString() });
+                var product = Database.GetProductByBarcode(barcodeTB.Text);
+                ticketGrid.Rows.Add(product[0], product[1], product[2], QtyUpDown.Value.ToString(), (Convert.ToDecimal(product[2]) * QtyUpDown.Value).ToString());
 
                 totalPriceTB.Text = TotalPrice().ToString();
             }
@@ -50,16 +51,8 @@ namespace POS
 
         private decimal TotalPrice()
         {
-            List<decimal> totals = new List<decimal>();
-            decimal total = 0;
-
-            foreach (DataGridViewRow row in ticketGrid.Rows)
-                totals.Add(Convert.ToDecimal(row.Cells[4].Value));
-
-            foreach (decimal tot in totals)
-                total += tot;
-
-            return total;
+            var totals = (from DataGridViewRow row in ticketGrid.Rows select Convert.ToDecimal(row.Cells[4].Value)).ToList();
+            return totals.Sum();
         }
 
         private void newTransButton_Click(object sender, EventArgs e)
@@ -75,7 +68,7 @@ namespace POS
             restTB.Text = "";
             totalPriceTB.Text = "";
             QtyUpDown.Value = 1;
-            transID.Text = "Transaction ID: " + Database.GetNextTransactionId().ToString();
+            transID.Text = "Transaction ID: " + Database.GetNextTransactionId();
         }
 
         private void chargeButton_Click(object sender, EventArgs e)
@@ -100,8 +93,8 @@ namespace POS
 
             try
             {
-                decimal totalPrice = Convert.ToDecimal(totalPriceTB.Text);
-                decimal cashGiven = Convert.ToDecimal(cashGivenTB.Text);
+                var totalPrice = Convert.ToDecimal(totalPriceTB.Text);
+                var cashGiven = Convert.ToDecimal(cashGivenTB.Text);
 
                 restTB.Text = (cashGiven - totalPrice).ToString();
             }

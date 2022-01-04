@@ -1,13 +1,13 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using MySql.Data.MySqlClient;
 
 namespace POS
 {
     public class Database
     {
-        private static readonly string ConnectionString =
+        private const string ConnectionString =
             "datasource=localhost; port=3306;username=root;password=;database=pos;SslMode=none";
 
         public static MySqlConnection Connection;
@@ -21,17 +21,16 @@ namespace POS
         {
             string result = default;
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var reader = cmd.ExecuteReader();
 
             if (reader.HasRows)
                 while (reader.Read())
-                    if (!reader.IsDBNull(0))
-                        result = reader.GetString(0);
-                    else
-                        result = null;
+                    result = !reader.IsDBNull(0) ? reader.GetString(0) : null;
 
             reader.Close();
 
@@ -40,50 +39,37 @@ namespace POS
 
         public static bool ExecuteQuery(string cmdText)
         {
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var result = cmd.ExecuteNonQuery();
 
-            if (result >= 1)
-                return true;
-            return false;
+            return result >= 1;
         }
 
         public static bool InsertUser(string username, string password, string firstName, string surname, string dob,
             int role)
-        {
-            return ExecuteQuery(
+            => ExecuteQuery(
                 $"INSERT INTO users(id, username, password, name, surname, dob, role) VALUES (null, \"{username}\", \"{password}\",\"{firstName}\",\"{surname}\",\"{dob}\",{role})");
-        }
 
         public static int GetNextUserId()
-        {
-            return Convert.ToInt32(QueryResult("SELECT MAX(id) FROM users;")) + 1;
-        }
+            => Convert.ToInt32(QueryResult("SELECT MAX(id) FROM users;")) + 1;
 
-        public static int GetNextTransactionId()
-        {
-            return Convert.ToInt32(QueryResult("SELECT MAX(id) FROM sales;")) + 1;
-        }
+        public static int GetNextTransactionId() => Convert.ToInt32(QueryResult("SELECT MAX(id) FROM sales;")) + 1;
 
-        public static int GetUserId(string username)
-        {
-            return Convert.ToInt32(QueryResult($"SELECT id FROM users WHERE username=\"{username}\";"));
-        }
+        public static int GetUserId(string username) =>
+            Convert.ToInt32(QueryResult($"SELECT id FROM users WHERE username=\"{username}\";"));
 
-        public static bool ValidCredentials(string username, string password)
-        {
-            if (password == QueryResult($"SELECT password FROM users WHERE username=\"{username}\";"))
-                return true;
-            return false;
-        }
+        public static bool ValidCredentials(string username, string password) =>
+            password == QueryResult($"SELECT password FROM users WHERE username=\"{username}\";");
 
         public static List<string[]> GetAllUsers()
         {
             var users = new List<string[]>();
 
-            var cmdText = "SELECT * FROM users;";
+            const string cmdText = "SELECT * FROM users;";
 
             var cmd = new MySqlCommand(cmdText, Connection);
             cmd.CommandTimeout = 60;
@@ -113,10 +99,12 @@ namespace POS
         {
             var products = new List<string[]>();
 
-            var cmdText = "SELECT * FROM products;";
+            const string cmdText = "SELECT * FROM products;";
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var reader = cmd.ExecuteReader();
 
@@ -143,7 +131,7 @@ namespace POS
         {
             var pendingOrders = new List<string[]>();
 
-            var cmdText = "SELECT * FROM pending_orders;";
+            const string cmdText = "SELECT * FROM pending_orders;";
 
             var cmd = new MySqlCommand(cmdText, Connection);
             cmd.CommandTimeout = 60;
@@ -175,7 +163,7 @@ namespace POS
         {
             var pendingOrders = new List<string[]>();
 
-            var cmdText = "SELECT * FROM received_orders;";
+            const string cmdText = "SELECT * FROM received_orders;";
 
             var cmd = new MySqlCommand(cmdText, Connection);
             cmd.CommandTimeout = 60;
@@ -206,7 +194,7 @@ namespace POS
         {
             var suppliers = new List<string>();
 
-            var cmdText = "SELECT name FROM suppliers;";
+            const string cmdText = "SELECT name FROM suppliers;";
 
             var cmd = new MySqlCommand(cmdText, Connection);
             cmd.CommandTimeout = 60;
@@ -228,8 +216,10 @@ namespace POS
 
             var cmdText = $"SELECT phone_no, company FROM suppliers WHERE name=\"{name}\";";
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var reader = cmd.ExecuteReader();
 
@@ -249,7 +239,7 @@ namespace POS
         {
             var suppliers = new List<string[]>();
 
-            var cmdText = "SELECT * FROM suppliers;";
+            const string cmdText = "SELECT * FROM suppliers;";
 
             var cmd = new MySqlCommand(cmdText, Connection);
             cmd.CommandTimeout = 60;
@@ -333,8 +323,10 @@ namespace POS
 
             var sales = new List<string[]>();
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var reader = cmd.ExecuteReader();
 
@@ -365,8 +357,11 @@ namespace POS
 
             var cmdText = $"SELECT product FROM suppliers WHERE name=\"{supplier}\";";
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
+
 
             var reader = cmd.ExecuteReader();
 
@@ -385,8 +380,10 @@ namespace POS
 
             var cmdText = $"SELECT * FROM products WHERE barcode=\"{barcode}\";";
 
-            var cmd = new MySqlCommand(cmdText, Connection);
-            cmd.CommandTimeout = 60;
+            var cmd = new MySqlCommand(cmdText, Connection)
+            {
+                CommandTimeout = 60
+            };
 
             var reader = cmd.ExecuteReader();
 
@@ -403,22 +400,16 @@ namespace POS
             return product;
         }
 
-        public static int GetRole(string username)
-        {
-            return Convert.ToInt32(QueryResult($"SELECT role FROM users WHERE username=\"{username}\";"));
-        }
+        public static int GetRole(string username) =>
+            Convert.ToInt32(QueryResult($"SELECT role FROM users WHERE username=\"{username}\";"));
 
-        public static bool AddSale(string name, string barcode, int qty, decimal price, decimal total)
-        {
-            return ExecuteQuery(
+        public static bool AddSale(string name, string barcode, int qty, decimal price, decimal total) =>
+            ExecuteQuery(
                 $"INSERT INTO sales(id, date, name, barcode, qty, price, total) VALUES (null, \"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\",\"{name}\", \"{barcode}\", {qty},\"{price.ToString().Replace(',', '.')}\", \"{total.ToString().Replace(',', '.')}\");");
-        }
 
-        public static bool UpdateUser(List<string> userData)
-        {
-            return ExecuteQuery(
+        public static bool UpdateUser(List<string> userData) =>
+            ExecuteQuery(
                 $"UPDATE users SET username=\"{userData[2]}\", name=\"{userData[1].Split(' ')[0]}\", surname=\"{userData[1].Split(' ')[1]}\", dob=\"{userData[3]}\", role={userData[4]} WHERE id={userData[0]};");
-        }
 
         public static bool ConfirmOrder(List<string[]> orders)
         {
@@ -438,63 +429,40 @@ namespace POS
                     $"INSERT INTO received_orders(id, date, prod_name, supplier, barcode, qty, total) VALUES (null, \"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\", \"{prodName}\", \"{supplier}\", \"{barcode}\", {qty}, {total.ToString().Replace(',', '.')})");
             }
 
-            if (b && b1)
-                return true;
-            return false;
+            return b && b1;
         }
 
-        public static bool AddSupplier(string name, string phoneNo, string company, List<string[]> products) 
-            => products.All(product => ExecuteQuery($"INSERT INTO suppliers(id, name, barcode, phone_no, company, product, price, qty) VALUES (null, \"{name}\", \"{product[1]}\", \"{phoneNo}\", \"{company}\", \"{product[0]}\", {product[2]}, 500);"));
+        public static bool AddSupplier(string name, string phoneNo, string company, List<string[]> products)
+            => products.All(product =>
+                ExecuteQuery(
+                    $"INSERT INTO suppliers(id, name, barcode, phone_no, company, product, price, qty) VALUES (null, \"{name}\", \"{product[1]}\", \"{phoneNo}\", \"{company}\", \"{product[0]}\", {product[2]}, 500);"));
 
-        public static bool AddProduct(string name, string barcode, decimal org_price, decimal markup_price, int qty)
-        {
-            if (!ExecuteQuery(
-                $"INSERT INTO products(id, name, barcode, org_price, mrkup_price, qty) VALUES (null, \"{name}\", \"{barcode}\", {org_price.ToString().Replace(',', '.')}, {markup_price.ToString().Replace(',', '.')}, {qty})"))
-                return false;
+        public static bool AddProduct(string name, string barcode, decimal org_price, decimal markup_price, int qty) =>
+            ExecuteQuery(
+                $"INSERT INTO products(id, name, barcode, org_price, mrkup_price, qty) VALUES (null, \"{name}\", \"{barcode}\", {org_price.ToString().Replace(',', '.')}, {markup_price.ToString().Replace(',', '.')}, {qty})");
 
-            return true;
-        }
-
-        public static bool DeleteUser(int id)
-        {
-            return ExecuteQuery($"DELETE FROM users WHERE id={id};");
-        }
+        public static bool DeleteUser(int id) => ExecuteQuery($"DELETE FROM users WHERE id={id};");
 
         public static bool UpdateSupplier(string name, string phoneNo, string company, List<string> product)
         {
             var txt =
                 $"UPDATE suppliers SET name=\"{name}\",barcode=\"{product[2]}\",phone_no=\"{phoneNo}\",company=\"{company}\",product=\"{product[1]}\",price={product[3]},qty={product[4]} WHERE id={product[0]};";
 
-            if (!ExecuteQuery(txt))
-                return false;
-
-            return true;
+            return ExecuteQuery(txt);
         }
 
-        public static string GetSupplierProductBarcode(string supplier, string prodname)
-        {
-            return QueryResult($"SELECT barcode FROM suppliers WHERE name=\"{supplier}\" AND product=\"{prodname}\";");
-        }
+        public static string GetSupplierProductBarcode(string supplier, string prodname) =>
+            QueryResult($"SELECT barcode FROM suppliers WHERE name=\"{supplier}\" AND product=\"{prodname}\";");
 
-        public static bool ProductAvailable(string barcode, int qty)
-        {
-            if (Convert.ToInt32(QueryResult($"SELECT qty FROM products WHERE barcode=\"{barcode}\";")) >= qty)
-                return true;
-            return false;
-        }
+        public static bool ProductAvailable(string barcode, int qty) =>
+            Convert.ToInt32(QueryResult($"SELECT qty FROM products WHERE barcode=\"{barcode}\";")) >= qty;
 
-        public static bool SupplierProductAvailable(string supplier, string prodname, int qty)
-        {
-            if (Convert.ToInt32(
-                QueryResult($"SELECT qty FROM suppliers WHERE name=\"{supplier}\" AND product=\"{prodname}\";")) >= qty)
-                return true;
-            return false;
-        }
+        public static bool SupplierProductAvailable(string supplier, string prodname, int qty) =>
+            Convert.ToInt32(
+                QueryResult($"SELECT qty FROM suppliers WHERE name=\"{supplier}\" AND product=\"{prodname}\";")) >= qty;
 
-        public static decimal GetSupplierProductPrice(string name)
-        {
-            return Convert.ToDecimal(QueryResult($"SELECT price FROM suppliers WHERE product=\"{name}\";"));
-        }
+        public static decimal GetSupplierProductPrice(string name) =>
+            Convert.ToDecimal(QueryResult($"SELECT price FROM suppliers WHERE product=\"{name}\";"));
 
         public static bool PlaceOrder(string supplier, string product, string barcode, int qty, decimal total)
         {
@@ -506,14 +474,11 @@ namespace POS
 
             var result = cmd.ExecuteNonQuery();
 
-            if (result == 1)
-            {
-                ExecuteQuery(
-                    $"UPDATE suppliers SET qty=qty-{qty} WHERE name=\"{supplier}\" AND product=\"{product}\";");
-                return true;
-            }
+            if (result != 1) return false;
 
-            return false;
+            ExecuteQuery(
+                $"UPDATE suppliers SET qty=qty-{qty} WHERE name=\"{supplier}\" AND product=\"{product}\";");
+            return true;
         }
     }
 }

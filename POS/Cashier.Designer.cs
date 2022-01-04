@@ -363,7 +363,7 @@ namespace POS
             this.addProdButton.TabIndex = 25;
             this.addProdButton.Text = "ADD PRODUCT";
             this.addProdButton.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
-            this.addProdButton.Click += new System.EventHandler(this.addProdButton_Click);
+            this.addProdButton.Click += new System.EventHandler(this.AddProdButton_Click);
             // 
             // statusStrip1
             // 
@@ -553,7 +553,7 @@ namespace POS
             // dateTimer
             // 
             this.dateTimer.Enabled = true;
-            this.dateTimer.Tick += new System.EventHandler(this.dateTimer_Tick);
+            this.dateTimer.Tick += new System.EventHandler(this.DateTimer_Tick);
             // 
             // Cashier
             // 
